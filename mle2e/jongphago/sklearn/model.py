@@ -55,17 +55,17 @@ class RandomForestRegressor(RandomForestRegressor):
         rmse = np.sqrt(mse)
         return rmse
 
-    def cross_val_score_with_rmse(self, prepared, labels):
+    def cross_val_score_with_rmse(self, prepared, labels, scoring='neg_mean_squared_error', cv=2):
         _scores = cross_val_score(self, prepared, labels,
-                                  scoring="neg_mean_squared_error",
-                                  cv=2,
+                                  scoring=scoring,
+                                  cv=cv,
                                   verbose=2)
         return np.sqrt(-_scores)
 
-    def grid_search_cv(self, param_grid, prepared, labels):
-        self.grid_search_ = GridSearchCV(self, param_grid, cv=2,
-                                         scoring='neg_mean_squared_error',
-                                         return_train_score=True,
+    def grid_search_cv(self, param_grid, prepared, labels, return_train_score=True, scoring='neg_mean_squared_error', cv=2):
+        self.grid_search_ = GridSearchCV(self, param_grid, cv=cv,
+                                         scoring=scoring,
+                                         return_train_score=return_train_score,
                                          verbose=2
                                          )
         self.grid_search_.fit(prepared, labels)
