@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
@@ -46,13 +47,43 @@ class BaseRegressor:
         joblib.dump(self, file_name)
 
     def optimize(self, param_grid, prepared, labels, return_train_score=True, scoring='neg_mean_squared_error',
-                       cv=2):
+                 cv=2):
         self.grid_search_cv(param_grid=param_grid,
                             prepared=prepared,
                             labels=labels,
                             return_train_score=return_train_score,
                             scoring=scoring)
         self.final_model = self.grid_search_.best_estimator_
+
+
+class MyDecisionTreeRegressor(DecisionTreeRegressor, BaseRegressor):
+    def __init__(
+            self,
+            criterion="squared_error",
+            splitter="best",
+            max_depth=None,
+            min_samples_split=2,
+            min_samples_leaf=1,
+            min_weight_fraction_leaf=0.0,
+            max_features=None,
+            random_state=None,
+            max_leaf_nodes=None,
+            min_impurity_decrease=0.0,
+            ccp_alpha=0.0,
+    ):
+        super().__init__(
+            criterion=criterion,
+            splitter=splitter,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            min_weight_fraction_leaf=min_weight_fraction_leaf,
+            max_features=max_features,
+            random_state=random_state,
+            max_leaf_nodes=max_leaf_nodes,
+            min_impurity_decrease=min_impurity_decrease,
+            ccp_alpha=ccp_alpha
+        )
 
 
 class RandomForestRegressor(RandomForestRegressor, BaseRegressor):
