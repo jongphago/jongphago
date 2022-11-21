@@ -6,7 +6,56 @@ from sklearn.model_selection import GridSearchCV
 import joblib
 
 
-class RandomForestRegressor(RandomForestRegressor):
+class BaseRegressor:
+    def __init__(self):
+        self.grid_search_ = None
+        self.final_model = None
+        self.attributes = None
+
+    @staticmethod
+    def root_mean_squared_error(predictions, labels):
+        mse = mean_squared_error(predictions, labels)
+        rmse = np.sqrt(mse)
+        return rmse
+
+    def cross_val_score_with_rmse(self, prepared, labels, scoring='neg_mean_squared_error', cv=2):
+        _scores = cross_val_score(self, prepared, labels,
+                                  scoring=scoring,
+                                  cv=cv,
+                                  verbose=2)
+        return np.sqrt(-_scores)
+
+    def grid_search_cv(self, param_grid, prepared, labels, return_train_score=True, scoring='neg_mean_squared_error',
+                       cv=2):
+        self.grid_search_ = GridSearchCV(self, param_grid, cv=cv,
+                                         scoring=scoring,
+                                         return_train_score=return_train_score,
+                                         verbose=2
+                                         )
+        self.grid_search_.fit(prepared, labels)
+
+    @property
+    def importances(self):
+        return self.grid_search_.best_estimator_.feature_importances_
+
+    # TODO
+    def set_attributes(self, num_attribs, extra_attribs, cat_one_hot_attribs):
+        self.attributes = num_attribs + extra_attribs + cat_one_hot_attribs
+
+    def save_model(self, file_name: str = 'my_model.pkl'):
+        joblib.dump(self, file_name)
+
+    def optimize(self, param_grid, prepared, labels, return_train_score=True, scoring='neg_mean_squared_error',
+                       cv=2):
+        self.grid_search_cv(param_grid=param_grid,
+                            prepared=prepared,
+                            labels=labels,
+                            return_train_score=return_train_score,
+                            scoring=scoring)
+        self.final_model = self.grid_search_.best_estimator_
+
+
+class RandomForestRegressor(RandomForestRegressor, BaseRegressor):
     def __init__(
             self,
             n_estimators=100,
@@ -46,37 +95,3 @@ class RandomForestRegressor(RandomForestRegressor):
             ccp_alpha=ccp_alpha,
             max_samples=max_samples
         )
-        self.grid_search_ = None
-        self.attributes = None
-
-    @staticmethod
-    def root_mean_squared_error(predictions, labels):
-        mse = mean_squared_error(predictions, labels)
-        rmse = np.sqrt(mse)
-        return rmse
-
-    def cross_val_score_with_rmse(self, prepared, labels, scoring='neg_mean_squared_error', cv=2):
-        _scores = cross_val_score(self, prepared, labels,
-                                  scoring=scoring,
-                                  cv=cv,
-                                  verbose=2)
-        return np.sqrt(-_scores)
-
-    def grid_search_cv(self, param_grid, prepared, labels, return_train_score=True, scoring='neg_mean_squared_error', cv=2):
-        self.grid_search_ = GridSearchCV(self, param_grid, cv=cv,
-                                         scoring=scoring,
-                                         return_train_score=return_train_score,
-                                         verbose=2
-                                         )
-        self.grid_search_.fit(prepared, labels)
-
-    @property
-    def importances(self):
-        return self.grid_search_.best_estimator_.feature_importances_
-
-    # TODO
-    def set_attributes(self, num_attribs, extra_attribs, cat_one_hot_attribs):
-        self.attributes = num_attribs + extra_attribs + cat_one_hot_attribs
-
-    def save_model(self, file_name: str = 'my_model.pkl'):
-        joblib.dump(self, file_name)
